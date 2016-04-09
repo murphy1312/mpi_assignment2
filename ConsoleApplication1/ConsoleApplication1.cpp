@@ -14,6 +14,8 @@
 int world_rank;
 int world_size;
 int *totalArray;
+int totalMean;
+int totalDifferenceSum = 0;
 
 // print an array
 template<typename Type>
@@ -22,14 +24,13 @@ void printArray(Type *array, int size)
 	for (int i = 0; i<size; i++)
 	{
 		std::cout << array[i] << "\t";
-		
 	}
 	std::cout << std::endl;
 }
 
 // sum an array and return the sum
 template<typename Type>
-Type sum(Type *array, int size)
+Type sumArray(Type *array, int size)
 {
 	Type sum;
 	for (int i = 0; i<size; i++)
@@ -53,7 +54,7 @@ Type sumDifferences(Type *array, int size, Type overall_mean)
 	Type sumDifference;
 	for (int i = 0; i<size; i++)
 	{
-		Type differenceSquare = (array[i] - overall_mean) ^ 2;
+		Type differenceSquare = (array[i] - overall_mean) * (array[i] - overall_mean);
 		if (i == 0)
 		{
 			sumDifference = differenceSquare;
@@ -84,20 +85,50 @@ void coordinator(int array_size)
 		totalArray[i] = fRand(0, 50);
 	}
 
+	// calculate the size for each node
 	int size_for_each_node = array_size / world_size;
 
+	// allocate the partition for this node
 	int *partition = new int[size_for_each_node];
 
 	// broadcast the partition size
 	MPI_Bcast(&size_for_each_node, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	// scatter the partitions to each node
+	// scatter the partition to each node
 	MPI_Scatter(totalArray, size_for_each_node, MPI_INT, partition, size_for_each_node,
 		MPI_INT, 0, MPI_COMM_WORLD);
 
+	// sum up the values in this partition
+	int sum = sumArray(partition, size_for_each_node);
 
-	// MPI_Reduce()
+	// calulate the mean for this node
+	int mean = sum / size_for_each_node;
 
+	// reduce mean to totalMean
+	MPI_Reduce(&mean, &totalMean, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// calulate overall mean
+	int overallAverage = totalMean / world_size;
+
+	// broadcast the overall mean to every node
+	MPI_Bcast(&overallAverage, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// calulate the sum of the differences
+	int sumDiff = sumDifferences(partition, size_for_each_node, overallAverage);
+
+	// reduce the sum to totalDifferenceSum
+	MPI_Reduce(&sumDiff, &totalDifferenceSum, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// calculate the standard deviation
+	double standardDeviation = sqrt(totalDifferenceSum / array_size);
+
+	std::cout << "Total mean: " << overallAverage << std::endl;
+	std::cout << "Standard Deviation: " << standardDeviation << std::endl;
+
+	printArray(totalArray, array_size);
+
+	// clean up memory
+	delete partition;
 }
 
 /* slave node method */
@@ -111,8 +142,27 @@ void participant()
 	// receive the partition of the total array this node works on
 	MPI_Scatter(totalArray, size, MPI_INT, partition, size,
 		MPI_INT, 0, MPI_COMM_WORLD);
-	
 
+	// calculate the sum
+	int sum = sumArray(partition, size);
+	// calculate the mean
+	int mean = sum / size;
+
+	// reduce mean to totalMean
+	MPI_Reduce(&mean, &totalMean, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// get the overall average from coordinator
+	int overallAverage = 0;
+	MPI_Bcast(&overallAverage, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// calulate the sum of the differences
+	int sumDiff = sumDifferences(partition, size, overallAverage);
+
+	// reduce the sum to totalDifferenceSum
+	MPI_Reduce(&sumDiff, &totalDifferenceSum, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	// clean up memory
+	delete partition;
 }
 
 
@@ -162,32 +212,3 @@ int main(int argc, char** argv)
 	MPI_Finalize();
 	return 0;
 }
-
-/*
-int arr[] = {0,4,5,6};
-std::string arr2[] = { "hi", "sup" };
-
-double arr3[] = { 1.3, 4.5, 6.9, 19.12 };
-
-printArray(arr, 4);
-printArray(arr2, 2);
-printArray(arr3, 4);
-
-int summe = 0;
-summe = sum(arr, 4);
-
-std::string summe2 = "";
-summe2 = sum(arr2, 2);
-
-double summe3 = 0.0;
-summe3 = sum(arr3, 4);
-
-
-std::cout << summe << std::endl;
-std::cout << summe2 << std::endl;
-std::cout << summe3 << std::endl;*/
-
-
-
-
-
