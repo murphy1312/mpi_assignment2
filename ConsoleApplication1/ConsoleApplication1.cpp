@@ -12,6 +12,7 @@
 
 int world_rank;
 
+// print an array
 template<typename Type>
 void printArray(Type *array, int size)
 {
@@ -23,6 +24,7 @@ void printArray(Type *array, int size)
 	std::cout << std::endl;
 }
 
+// sum an array and return the sum
 template<typename Type>
 Type sum(Type *array, int size)
 {
@@ -41,14 +43,39 @@ Type sum(Type *array, int size)
 	return sum;
 }
 
+// sumDifferences
+/* takes in a reference to an array, an array size, and
+the overall mean of the dataset. It should produce a sum of the square of differences
+between each value in the dataset and the mean and return this as the result */
+
+template<typename Type>
+Type sumDifferences(Type *array, int size, Type overall_mean)
+{
+	Type sumDifference;
+	for (int i = 0; i<size; i++)
+	{
+		Type differenceSquare = (array[i] - overall_mean) ^ 2;
+		if (i == 0)
+		{
+			sumDifference = differenceSquare;
+		}
+		else
+		{
+			sumDifference = sumDifference + differenceSquare;
+		}
+	}
+	return sumDifference;
+}
+
+
+
 /* master node method */
 void coordinator()
 {
-	int arr[] = { 0,4,5,6 };
+	int arr[] = {0,4,5,6};
 	std::string arr2[] = { "hi", "sup" };
 
 	double arr3[] = { 1.3, 4.5, 6.9, 19.12 };
-
 
 	printArray(arr, 4);
 	printArray(arr2, 2);
@@ -63,9 +90,12 @@ void coordinator()
 	double summe3 = 0.0;
 	summe3 = sum(arr3, 4);
 
+
 	std::cout << summe << std::endl;
 	std::cout << summe2 << std::endl;
 	std::cout << summe3 << std::endl;
+
+
 
 
 
