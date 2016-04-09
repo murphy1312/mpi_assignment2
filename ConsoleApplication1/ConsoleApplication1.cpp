@@ -122,10 +122,13 @@ void coordinator(int array_size)
 	// calculate the standard deviation
 	double standardDeviation = sqrt(totalDifferenceSum / array_size);
 
+	// print the array
+	printArray(totalArray, array_size);
+
 	std::cout << "Total mean: " << overallAverage << std::endl;
 	std::cout << "Standard Deviation: " << standardDeviation << std::endl;
 
-	printArray(totalArray, array_size);
+	
 
 	// clean up memory
 	delete partition;
