@@ -4,6 +4,10 @@
 /** includes **/
 #include "stdafx.h"
 #include <mpi.h>
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
+
 
 int world_rank;
 
