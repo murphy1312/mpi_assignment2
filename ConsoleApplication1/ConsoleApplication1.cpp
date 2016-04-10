@@ -1,6 +1,6 @@
 // ConsoleApplication1.cpp
-// use monte carlo to calculate pi
-/** simple program to test the MPI stuff to see if it works **/
+// calculate the mean and the standard deviation
+
 /** includes **/
 #include "stdafx.h"
 #include <mpi.h>
@@ -78,11 +78,14 @@ double fRand(double fMin, double fMax)
 /* master node method */
 void coordinator(int array_size)
 {
+	double start, end;
+	start = MPI_Wtime();
+
 	srand(1);
 	totalArray = new int[array_size];
 	for (int i = 0; i < array_size; i++)
 	{
-		totalArray[i] = fRand(0, 50);
+		totalArray[i] = fRand(0, 51);
 	}
 
 	// calculate the size for each node
@@ -122,13 +125,15 @@ void coordinator(int array_size)
 	// calculate the standard deviation
 	double standardDeviation = sqrt(totalDifferenceSum / array_size);
 
-	// print the array
-	printArray(totalArray, array_size);
+	// get the end time
+	end = MPI_Wtime();
+	// std::cout << "Time spend: " << end-start << std::endl;
+	// print the array and output the results
+	// printArray(totalArray, array_size);
+	std::cout << end - start << std::endl;
+	//std::cout << "Total mean: " << overallAverage << std::endl;
+	//std::cout << "Standard Deviation: " << standardDeviation << std::endl;
 
-	std::cout << "Total mean: " << overallAverage << std::endl;
-	std::cout << "Standard Deviation: " << standardDeviation << std::endl;
-
-	
 
 	// clean up memory
 	delete partition;
@@ -189,7 +194,7 @@ int main(int argc, char** argv)
 	{
 		array_size = 120;
 	}
-
+	
 	if (!(array_size % world_size == 0))
 	{
 		if (world_rank == 0)
@@ -200,7 +205,6 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	
 	// master node 
 	if (world_rank == 0)
 	{
